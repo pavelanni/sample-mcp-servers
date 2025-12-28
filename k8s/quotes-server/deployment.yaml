@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quotes-server
+  namespace: quotes-server
+  labels:
+    app: quotes-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quotes-server
+  template:
+    metadata:
+      labels:
+        app: quotes-server
+    spec:
+      # Allow scheduling on tainted nodes (single-node Kind cluster)
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/unreachable
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: quotes-server
+        image: ghcr.io/pavelanni/quotes-server:main
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8082
+          name: http
+        env:
+        - name: QUOTES_SERVER_PORT
+          value: "8082"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+
