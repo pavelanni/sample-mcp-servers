@@ -232,13 +232,78 @@ mcp-test/moon-route:moon_:http://moon-service.moon-server.svc.cluster.local:8081
 If the ConfigMap uses a different format (like just the MCPServer name), the
 controller will log "NOT validating" with mismatched IDs and report 0 tools.
 
+### Wrong gateway namespace in tool calls (gateway-system error)
+
+When calling tools, you may see an error like:
+
+```text
+Post "http://mcp-gateway-istio.gateway-system.svc.cluster.local:8080/mcp":
+dial tcp: lookup mcp-gateway-istio.gateway-system.svc.cluster.local: no such host
+```
+
+**Cause:** The broker's `--mcp-gateway-private-host` flag has a wrong default
+value that uses `gateway-system` namespace instead of `mcp-system`.
+
+**Symptoms:**
+
+- `initialize` and `tools/list` work fine
+- `tools/call` fails with the above error
+- Broker logs show: `failed to get remote session`
+
+**Fix during Helm install/upgrade (recommended):**
+
+Create a values file or add to your existing values:
+
+```yaml
+# values.yaml
+broker:
+  extraArgs:
+    - "--mcp-gateway-private-host=mcp-gateway-istio.mcp-system.svc.cluster.local:80"
+```
+
+Then install or upgrade:
+
+```bash
+helm upgrade --install mcp-gateway oci://ghcr.io/kagenti/charts/mcp-gateway \
+  -n mcp-system \
+  -f values.yaml
+```
+
+**Quick fix with kubectl patch (temporary):**
+
+If you've already installed and need a quick fix:
+
+```bash
+kubectl patch deployment mcp-gateway-broker-router -n mcp-system --type='json' \
+  -p='[{"op": "add", "path": "/spec/template/spec/containers/0/command/-", "value": "--mcp-gateway-private-host=mcp-gateway-istio.mcp-system.svc.cluster.local:80"}]'
+```
+
+Note: This patch won't persist across `helm upgrade`. Use the Helm values
+approach for a permanent fix.
+
+**Verify the fix:**
+
+```bash
+# Check the flag is set
+kubectl get deployment mcp-gateway-broker-router -n mcp-system \
+  -o jsonpath='{.spec.template.spec.containers[0].command}' | tr ',' '\n' | grep private-host
+
+# Expected output:
+# "--mcp-gateway-private-host=mcp-gateway-istio.mcp-system.svc.cluster.local:80"
+```
+
 ### Reporting issues
 
-If you encounter the ConfigMap not updating issue, please report it at:
+If you encounter issues, please report them at:
 <https://github.com/Kuadrant/mcp-gateway/issues>
 
-Include:
+For the ConfigMap not updating issue, include:
 
 1. Controller logs showing "Successfully regenerated aggregated configuration"
 1. ConfigMap resourceVersion staying unchanged
 1. Your MCPServer and HTTPRoute manifests
+
+For the gateway-system namespace issue, include:
+
+1. Broker logs showing `failed to get remote session`
+1. The Helm values you used during installation
