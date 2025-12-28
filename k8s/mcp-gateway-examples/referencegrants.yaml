@@ -1,0 +1,49 @@
+# ReferenceGrants for cross-namespace HTTPRoute references
+#
+# These are required when using Strategy 3 (Hybrid):
+# - Backend Services in separate namespaces (moon-server, quotes-server, weather-server)
+# - HTTPRoutes in shared namespace (mcp-test)
+#
+# Each ReferenceGrant must be in the TARGET namespace (where the Service lives)
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-mcp-test-httproutes
+  namespace: moon-server
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: mcp-test
+  to:
+    - group: ""
+      kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-mcp-test-httproutes
+  namespace: quotes-server
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: mcp-test
+  to:
+    - group: ""
+      kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-mcp-test-httproutes
+  namespace: weather-server
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: mcp-test
+  to:
+    - group: ""
+      kind: Service

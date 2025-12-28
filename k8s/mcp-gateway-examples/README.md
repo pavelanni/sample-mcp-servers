@@ -3,6 +3,11 @@
 These manifests configure the sample MCP servers to work with
 [mcp-gateway](https://github.com/Kuadrant/mcp-gateway).
 
+See also:
+
+- [NAMESPACE-STRATEGIES.md](NAMESPACE-STRATEGIES.md) - Guide to organizing
+  resources across namespaces
+
 ## Prerequisites
 
 1. mcp-gateway installed in the `mcp-system` namespace
