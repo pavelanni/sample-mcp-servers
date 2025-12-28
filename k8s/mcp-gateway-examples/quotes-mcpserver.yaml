@@ -1,0 +1,14 @@
+apiVersion: mcp.kagenti.com/v1alpha1
+kind: MCPServer
+metadata:
+  name: quotes-mcp-server
+  namespace: mcp-test
+  labels:
+    kagenti/mcp: "true"
+spec:
+  toolPrefix: quotes_
+  path: /mcp
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: quotes-route

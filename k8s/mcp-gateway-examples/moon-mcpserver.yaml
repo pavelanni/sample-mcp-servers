@@ -1,0 +1,14 @@
+apiVersion: mcp.kagenti.com/v1alpha1
+kind: MCPServer
+metadata:
+  name: moon-mcp-server
+  namespace: mcp-test
+  labels:
+    kagenti/mcp: "true"
+spec:
+  toolPrefix: moon_
+  path: /mcp
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: moon-route
